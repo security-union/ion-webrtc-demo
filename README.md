@@ -28,9 +28,9 @@ The server will start sending you the streaming data (video/audio) of the other 
 Example: 
 
 ```dart
-final _signal = await ion.GRPCWebSignal('<SFU server address>');;
+final signal = await ion.GRPCWebSignal('<SFU server address>');;
 
-_client = await ion.Client.create(
+client = await ion.Client.create(
   sid: sid, // Session id
   uid: uid, // Send our UUID so the server knows who we are
   signal: _signal, // Signaling object pointing to the SFU server
@@ -38,29 +38,19 @@ _client = await ion.Client.create(
 
 // You are already connected to the server and ready to receive data lol
 
-_client.ontrack = (track, ion.RemoteStream remoteStream) async {
+client.ontrack = (track, ion.RemoteStream remoteStream) async {
   if (track.kind == 'video') {
     // Now we can store the remote stream and create a RTCVideoRenderer with it
-    final remoteRenderer = RTCVideoRenderer();
-    await remoteRenderer.initialize();
-    setState(() {
-      remoteRenderer.srcObject = remoteStream.stream;
-      _plist.add(remoteRenderer);
-    });
   }
 };
 
 // Lets publish our video
 
-_localStream = await ion.LocalStream.getUserMedia(
+final localStream = await ion.LocalStream.getUserMedia(
      constraints: ion.Constraints.defaults..simulcast = false,
 );
 
-setState(() {
-  _localRenderer.srcObject = _localStream?.stream;
-});
-
-await _client.publish(_localStream!);
+await client.publish(_localStream);
 ``` 
 
 
