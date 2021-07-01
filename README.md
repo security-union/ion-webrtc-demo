@@ -28,7 +28,7 @@ The server will start sending you the streaming data (video/audio) of the other 
 Example: 
 
 ```dart
-final signal = await ion.GRPCWebSignal('<SFU server address>');;
+final signal = await ion.GRPCWebSignal('<SFU server address>');
 
 client = await ion.Client.create(
   sid: sid, // Session id
