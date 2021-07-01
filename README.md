@@ -21,7 +21,38 @@ Then, if you want to start sending video its as easy as just calling ```client.p
 
 More about SFU: https://webrtcglossary.com/sfu
 
-The cool thing about SFU and ion is that you dont need to care about signaling peer to peer but just signaling with the SFU server (which is done automatically by the library)
+The cool thing about SFU and ion is that you dont need to care about signaling peer to peer but just signaling with the SFU server (which is done automatically by the library).
+
+The server will start sending you the streaming data (video/audio) of the other peers on that session as soon as you connect to it.
+
+Example: 
+
+```dart
+final _signal = await ion.GRPCWebSignal('<SFU server address>');;
+
+_client = await ion.Client.create(
+  sid: sid, // Session id
+  uid: uid, // Send our UUID so the server knows who we are
+  signal: _signal, // Signaling object pointing to the SFU server
+);
+
+_client.ontrack = (track, ion.RemoteStream remoteStream) async {
+  if (track.kind == 'video') {
+    final remoteRenderer = RTCVideoRenderer();
+    await remoteRenderer.initialize();
+    setState(() {
+      remoteRenderer.srcObject = remoteStream.stream;
+      _plist.add(Participant(
+        remoteStream.id,
+        remoteRenderer,
+        remoteStream.stream,
+      ));
+    });
+  }
+};
+``` 
+
+
 
 
 
