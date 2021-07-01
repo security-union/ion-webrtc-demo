@@ -36,20 +36,31 @@ _client = await ion.Client.create(
   signal: _signal, // Signaling object pointing to the SFU server
 );
 
+// You are already connected to the server and ready to receive data lol
+
 _client.ontrack = (track, ion.RemoteStream remoteStream) async {
   if (track.kind == 'video') {
+    // Now we can store the remote stream and create a RTCVideoRenderer with it
     final remoteRenderer = RTCVideoRenderer();
     await remoteRenderer.initialize();
     setState(() {
       remoteRenderer.srcObject = remoteStream.stream;
-      _plist.add(Participant(
-        remoteStream.id,
-        remoteRenderer,
-        remoteStream.stream,
-      ));
+      _plist.add(remoteRenderer);
     });
   }
 };
+
+// Lets publish our video
+
+_localStream = await ion.LocalStream.getUserMedia(
+     constraints: ion.Constraints.defaults..simulcast = false,
+);
+
+setState(() {
+  _localRenderer.srcObject = _localStream?.stream;
+});
+
+await _client.publish(_localStream!);
 ``` 
 
 
