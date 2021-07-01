@@ -11,12 +11,10 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(brightness: Brightness.dark),
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const Home(title: 'Ion WebRTC 1 to N Broadcast'),
+      home: const Home(title: 'Ion WebRTC'),
     );
   }
 }
