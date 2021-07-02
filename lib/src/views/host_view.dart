@@ -64,24 +64,21 @@ class _HostViewState extends State<HostView> {
             )),
       );
 
-  Widget _qrCode(String content) => Expanded(
-        child: Center(
-          child: BarcodeWidget(
-            data: content,
-            barcode: Barcode.qrCode(),
-            color: Colors.white,
-            width: 200,
-            height: 200,
-          ),
+  Widget _qrCode(String content) => Center(
+        child: BarcodeWidget(
+          data: content,
+          barcode: Barcode.qrCode(),
+          color: Colors.white,
+          width: 200,
+          height: 200,
         ),
       );
 
   Widget _remotesView(BuildContext context, List<RTCVideoRenderer> renderers) =>
-      Expanded(
-          child: GridView.count(
+      GridView.count(
         crossAxisCount: 2,
         children: [...renderers.map((renderer) => RTCVideoView(renderer))],
-      ));
+      );
 
   Future<ion.Client> _createClient(
     String sid,
@@ -112,8 +109,6 @@ class _HostViewState extends State<HostView> {
 
   void _closeCall() {
     _client?.close();
-    setState(() {
-      _client = null;
-    });
+    _client = null;
   }
 }

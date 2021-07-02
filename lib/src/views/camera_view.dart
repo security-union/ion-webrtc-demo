@@ -73,17 +73,11 @@ class _CameraViewState extends State<CameraView> {
         true,
         ScanMode.QR,
       );
-
       final ionClient = await ion.Client.create(
         sid: data,
         uid: widget.uuid,
         signal: widget.signal,
       );
-
-      if (!ionClient.initialized) {
-        throw Exception(
-            'There was an error connecting to the server, check the server address');
-      }
       return ionClient;
     } on PlatformException {
       throw Exception('Scan failed, unable to get platform version');
@@ -106,6 +100,6 @@ class _CameraViewState extends State<CameraView> {
 
   void _closeCall() {
     _client?.close();
-    setState(() => _client = null);
+    _client = null;
   }
 }
