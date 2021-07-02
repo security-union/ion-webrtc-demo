@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
 import 'package:ion_webrtc_demo/src/styles/colors.dart';
 import 'package:ion_webrtc_demo/src/views/camera_view.dart';
+import 'package:ion_webrtc_demo/src/views/host_view.dart';
 import 'package:ion_webrtc_demo/src/widgets/role_card.dart';
 import 'package:ion_webrtc_demo/src/widgets/rounded_button.dart';
 
@@ -36,7 +37,7 @@ class _RoleViewState extends State<RoleView> {
             button: roundedButton(
               text: 'Host',
               color: AppColors.primaryBlue,
-              onPressed: () => print('Host!'),
+              onPressed: () => _navigateToHost(widget.uuid, widget.signal),
             ),
           ),
           roleCard(
@@ -60,6 +61,17 @@ class _RoleViewState extends State<RoleView> {
       MaterialPageRoute(
         builder: (BuildContext context) {
           return CameraView(uuid: uuid, signal: signal);
+        },
+      ),
+    );
+  }
+
+  void _navigateToHost(String uuid, ion.Signal signal) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext context) {
+          return HostView(uuid: uuid, signal: signal);
         },
       ),
     );

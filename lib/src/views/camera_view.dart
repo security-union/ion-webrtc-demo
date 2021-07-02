@@ -28,9 +28,12 @@ class _CameraViewState extends State<CameraView> {
   @override
   void initState() {
     _initLocalRender();
-    _scanQrCode()
-        .then((_) => _startSharingCamera)
-        .catchError((err) => alertDialog(context, err.toString()));
+    _scanQrCode().then((client) {
+      setState(() => _client = client);
+      _startSharingCamera(_client!);
+    }).catchError(
+      (err) => alertDialog(context, err.toString()),
+    );
     super.initState();
   }
 
@@ -62,7 +65,7 @@ class _CameraViewState extends State<CameraView> {
     );
   }
 
-  Future<void> _scanQrCode() async {
+  Future<ion.Client> _scanQrCode() async {
     try {
       final data = await FlutterBarcodeScanner.scanBarcode(
         '#0000',
@@ -81,8 +84,7 @@ class _CameraViewState extends State<CameraView> {
         throw Exception(
             'There was an error connecting to the server, check the server address');
       }
-
-      _client = ionClient;
+      return ionClient;
     } on PlatformException {
       throw Exception('Scan failed, unable to get platform version');
     }
@@ -92,7 +94,7 @@ class _CameraViewState extends State<CameraView> {
     await _localRenderer.initialize();
   }
 
-  void _startSharingCamera() async {
+  void _startSharingCamera(ion.Client client) async {
     _localStream = await ion.LocalStream.getUserMedia(
       constraints: ion.Constraints.defaults..simulcast = false,
     );
@@ -104,6 +106,6 @@ class _CameraViewState extends State<CameraView> {
 
   void _closeCall() {
     _client?.close();
-    _client = null;
+    setState(() => _client = null);
   }
 }
