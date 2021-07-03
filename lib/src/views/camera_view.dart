@@ -1,10 +1,9 @@
 // ignore_for_file: avoid_print
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
-import 'package:ion_webrtc_demo/src/utils.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class CameraView extends StatefulWidget {
   const CameraView({
@@ -21,25 +20,31 @@ class CameraView extends StatefulWidget {
 }
 
 class _CameraViewState extends State<CameraView> {
-  ion.Client? _client;
+  final GlobalKey _qrKey = GlobalKey(debugLabel: 'QR');
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   ion.LocalStream? _localStream;
+  QRViewController? _controller;
+  ion.Client? _client;
 
   @override
   void initState() {
     _initLocalRender();
-    _scanQrCode().then((client) {
-      setState(() => _client = client);
-      _startSharingCamera(_client!);
-    }).catchError(
-      (err) => alertDialog(context, err.toString()),
-    );
     super.initState();
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      _controller?.pauseCamera();
+    }
+    _controller?.resumeCamera();
   }
 
   @override
   void dispose() {
     _closeCall();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -49,43 +54,30 @@ class _CameraViewState extends State<CameraView> {
       appBar: AppBar(
         title: const Text('You are a Camera'),
       ),
-      floatingActionButton: _client != null
-          ? FloatingActionButton(
-              onPressed: _scanQrCode,
-              child: const Icon(Icons.qr_code),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => setState(() => _closeCall()),
+      ),
       body: _client == null
-          ? const Center(
-              child: Text('Scan a QR code to join a session'),
-            )
-          : Expanded(
-              child: RTCVideoView(_localRenderer),
-            ),
+          ? _buildQrView(context, onData: _onScanData)
+          : Expanded(child: RTCVideoView(_localRenderer)),
     );
-  }
-
-  Future<ion.Client> _scanQrCode() async {
-    try {
-      final data = await FlutterBarcodeScanner.scanBarcode(
-        '#0000',
-        'Cancel',
-        true,
-        ScanMode.QR,
-      );
-      final ionClient = await ion.Client.create(
-        sid: data,
-        uid: widget.uuid,
-        signal: widget.signal,
-      );
-      return ionClient;
-    } on PlatformException {
-      throw Exception('Scan failed, unable to get platform version');
-    }
   }
 
   _initLocalRender() async {
     await _localRenderer.initialize();
+  }
+
+  _onScanData(Barcode data) async {
+    final sessionId = data.code;
+    final ionClient = await ion.Client.create(
+      sid: sessionId,
+      uid: widget.uuid,
+      signal: widget.signal,
+    );
+    setState(() {
+      _client = ionClient;
+    });
+    _startSharingCamera(_client!);
   }
 
   void _startSharingCamera(ion.Client client) async {
@@ -96,6 +88,38 @@ class _CameraViewState extends State<CameraView> {
       _localRenderer.srcObject = _localStream?.stream;
     });
     await _client?.publish(_localStream!);
+  }
+
+  Widget _buildQrView(
+    BuildContext context, {
+    required Function(Barcode data) onData,
+  }) {
+    // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
+    var scanArea = (MediaQuery.of(context).size.width < 400 ||
+            MediaQuery.of(context).size.height < 400)
+        ? 150.0
+        : 300.0;
+    // To ensure the Scanner view is properly sizes after rotation
+    // we need to listen for Flutter SizeChanged notification and update controller
+    return QRView(
+      key: _qrKey,
+      onQRViewCreated: (controller) =>
+          _onQRViewCreated(controller, onData: onData),
+      overlay: QrScannerOverlayShape(
+          borderColor: Colors.red,
+          borderRadius: 10,
+          borderLength: 30,
+          borderWidth: 10,
+          cutOutSize: scanArea),
+    );
+  }
+
+  void _onQRViewCreated(
+    QRViewController controller, {
+    required Function(Barcode data) onData,
+  }) {
+    setState(() => _controller = controller);
+    controller.scannedDataStream.listen(onData);
   }
 
   void _closeCall() {
