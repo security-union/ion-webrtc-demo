@@ -56,10 +56,11 @@ class _CameraViewState extends State<CameraView> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => setState(() => _closeCall()),
+        child: const Icon(Icons.qr_code),
       ),
       body: _client == null
           ? _buildQrView(context, onData: _onScanData)
-          : Expanded(child: RTCVideoView(_localRenderer)),
+          : RTCVideoView(_localRenderer, mirror: true),
     );
   }
 
@@ -87,7 +88,7 @@ class _CameraViewState extends State<CameraView> {
     setState(() {
       _localRenderer.srcObject = _localStream?.stream;
     });
-    await _client?.publish(_localStream!);
+    await client.publish(_localStream!);
   }
 
   Widget _buildQrView(

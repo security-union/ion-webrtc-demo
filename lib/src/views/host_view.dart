@@ -1,5 +1,5 @@
 // ignore_for_file: avoid_print
-import 'package:barcode_widget/barcode_widget.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
 import 'package:ion_webrtc_demo/src/models/participant.dart';
@@ -64,20 +64,26 @@ class _HostViewState extends State<HostView> {
             )),
       );
 
-  Widget _qrCode(String content) => Center(
-        child: BarcodeWidget(
+  Widget _qrCode(String content) => Container(
+        decoration: const BoxDecoration(color: Colors.white),
+        alignment: Alignment.center,
+        child: QrImage(
           data: content,
-          barcode: Barcode.qrCode(),
-          color: Colors.white,
-          width: 200,
-          height: 200,
+          version: QrVersions.auto,
+          size: 200.0,
         ),
       );
 
   Widget _remotesView(BuildContext context, List<RTCVideoRenderer> renderers) =>
       GridView.count(
         crossAxisCount: 2,
-        children: [...renderers.map((renderer) => RTCVideoView(renderer))],
+        children: [
+          ...renderers.map((renderer) => Container(
+                width: 300,
+                height: 500,
+                child: RTCVideoView(renderer),
+              ))
+        ],
       );
 
   Future<ion.Client> _createClient(
@@ -97,6 +103,7 @@ class _HostViewState extends State<HostView> {
       final remoteRenderer = RTCVideoRenderer();
       await remoteRenderer.initialize();
       setState(() {
+        print(remoteStream.id);
         remoteRenderer.srcObject = remoteStream.stream;
         _participants[remoteStream.id] = Participant(
           remoteStream.id,
