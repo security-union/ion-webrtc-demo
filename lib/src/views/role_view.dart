@@ -2,10 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
 import 'package:ion_webrtc_demo/src/styles/colors.dart';
-import 'package:ion_webrtc_demo/src/views/camera_view.dart';
 import 'package:ion_webrtc_demo/src/views/host_view.dart';
+import 'package:ion_webrtc_demo/src/views/qr_scanner.dart';
 import 'package:ion_webrtc_demo/src/widgets/role_card.dart';
 import 'package:ion_webrtc_demo/src/widgets/rounded_button.dart';
+import 'package:uuid/uuid.dart';
 
 class RoleView extends StatefulWidget {
   const RoleView({
@@ -37,7 +38,15 @@ class _RoleViewState extends State<RoleView> {
             button: roundedButton(
               text: 'Host',
               color: AppColors.primaryBlue,
-              onPressed: () => _navigateToHost(widget.uuid, widget.signal),
+              onPressed: () async {
+                final sid = const Uuid().v4();
+                final client = await ion.Client.create(
+                  sid: sid,
+                  uid: widget.uuid,
+                  signal: widget.signal,
+                );
+                _navigateToHost(sid, client, widget.uuid);
+              },
             ),
           ),
           roleCard(
@@ -47,7 +56,7 @@ class _RoleViewState extends State<RoleView> {
             button: roundedButton(
               text: 'Camera',
               color: AppColors.primaryRed,
-              onPressed: () => _navigateToCamera(widget.uuid, widget.signal),
+              onPressed: () => _navigateToQRScanner(widget.uuid, widget.signal),
             ),
           )
         ],
@@ -55,23 +64,23 @@ class _RoleViewState extends State<RoleView> {
     );
   }
 
-  void _navigateToCamera(String uuid, ion.Signal signal) {
+  void _navigateToQRScanner(String uuid, ion.Signal signal) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return CameraView(uuid: uuid, signal: signal);
+          return QRScannerView(uuid: uuid, signal: signal);
         },
       ),
     );
   }
 
-  void _navigateToHost(String uuid, ion.Signal signal) {
+  void _navigateToHost(String sid, ion.Client client, String uuid) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return HostView(uuid: uuid, signal: signal);
+          return HostView(uuid: uuid, client: client, sid: sid);
         },
       ),
     );

@@ -3,19 +3,19 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
 import 'package:ion_webrtc_demo/src/models/participant.dart';
-import 'package:ion_webrtc_demo/src/utils.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:uuid/uuid.dart';
 
 class HostView extends StatefulWidget {
   const HostView({
     Key? key,
     required this.uuid,
-    required this.signal,
+    required this.sid,
+    required this.client,
   }) : super(key: key);
 
-  final ion.Signal signal;
+  final ion.Client client;
   final String uuid;
+  final String sid;
 
   @override
   State<HostView> createState() => _HostViewState();
@@ -23,20 +23,16 @@ class HostView extends StatefulWidget {
 
 class _HostViewState extends State<HostView> {
   final Map<String, Participant> _participants = <String, Participant>{};
-  ion.Client? _client;
-  final String _sid = const Uuid().v4();
 
   @override
   void initState() {
-    _createClient(_sid, widget.uuid, widget.signal, onTrack: _onTrack)
-        .then((client) => setState(() => _client = client))
-        .catchError((err) => alertDialog(context, err.toString()));
+    widget.client.ontrack = _onTrack;
     super.initState();
   }
 
   @override
   void dispose() {
-    _closeCall();
+    widget.client.close();
     super.dispose();
   }
 
@@ -55,10 +51,10 @@ class _HostViewState extends State<HostView> {
             ),
             body: TabBarView(
               children: <Widget>[
-                _qrCode(_sid),
+                _qrCode(widget.sid),
                 _remotesView(
                   context,
-                  [..._participants.values.map((e) => e.renderer)],
+                  _participants.values.map((e) => e.renderer).toList(),
                 )
               ],
             )),
@@ -75,36 +71,23 @@ class _HostViewState extends State<HostView> {
       );
 
   Widget _remotesView(BuildContext context, List<RTCVideoRenderer> renderers) =>
-      GridView.count(
-        crossAxisCount: 2,
+      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ...renderers.map((renderer) => Container(
-                width: 300,
-                height: 500,
-                child: RTCVideoView(renderer),
-              ))
+          ...renderers.map((value) => Expanded(
+                child: RTCVideoView(value),
+              )),
         ],
       );
-
-  Future<ion.Client> _createClient(
-    String sid,
-    String uuid,
-    ion.Signal signal, {
-    required Function(MediaStreamTrack, ion.RemoteStream) onTrack,
-  }) async {
-    final client = await ion.Client.create(sid: sid, uid: uuid, signal: signal);
-    client.ontrack = onTrack;
-    return client;
-  }
 
   _onTrack(MediaStreamTrack track, ion.RemoteStream remoteStream) async {
     if (track.kind == 'video') {
       print('ontrack: remote stream => ${remoteStream.id}');
       final remoteRenderer = RTCVideoRenderer();
       await remoteRenderer.initialize();
+      print(remoteStream.id);
+      remoteRenderer.srcObject = remoteStream.stream;
       setState(() {
-        print(remoteStream.id);
-        remoteRenderer.srcObject = remoteStream.stream;
         _participants[remoteStream.id] = Participant(
           remoteStream.id,
           remoteRenderer,
@@ -112,10 +95,5 @@ class _HostViewState extends State<HostView> {
         );
       });
     }
-  }
-
-  void _closeCall() {
-    _client?.close();
-    _client = null;
   }
 }
