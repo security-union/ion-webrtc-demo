@@ -35,8 +35,7 @@ class _HomeState extends State<Home> {
             _formKey,
             onUpdateAddr: (String addr) => setState(() => _addr = addr),
             onValidSubmit: () {
-              final signal = ion.GRPCWebSignal(_addr);
-              _navigateToRoleView(_uuid, signal);
+              _navigateToRoleView(_uuid, _addr);
             },
           ),
         ),
@@ -95,12 +94,12 @@ class _HomeState extends State<Home> {
         },
       );
 
-  void _navigateToRoleView(String uuid, ion.Signal signal) {
+  void _navigateToRoleView(String uuid, String addr) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return RoleView(uuid: uuid, signal: signal);
+          return RoleView(uuid: uuid, addr: addr);
         },
       ),
     );

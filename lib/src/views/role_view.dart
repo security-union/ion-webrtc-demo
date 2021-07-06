@@ -12,10 +12,10 @@ class RoleView extends StatefulWidget {
   const RoleView({
     Key? key,
     required this.uuid,
-    required this.signal,
+    required this.addr,
   }) : super(key: key);
 
-  final ion.Signal signal;
+  final String addr;
   final String uuid;
 
   @override
@@ -40,12 +40,8 @@ class _RoleViewState extends State<RoleView> {
               color: AppColors.primaryBlue,
               onPressed: () async {
                 final sid = const Uuid().v4();
-                final client = await ion.Client.create(
-                  sid: sid,
-                  uid: widget.uuid,
-                  signal: widget.signal,
-                );
-                _navigateToHost(sid, client, widget.uuid);
+
+                _navigateToHost(sid, widget.addr, widget.uuid);
               },
             ),
           ),
@@ -56,7 +52,7 @@ class _RoleViewState extends State<RoleView> {
             button: roundedButton(
               text: 'Camera',
               color: AppColors.primaryRed,
-              onPressed: () => _navigateToQRScanner(widget.uuid, widget.signal),
+              onPressed: () => _navigateToQRScanner(widget.uuid, widget.addr),
             ),
           )
         ],
@@ -64,23 +60,23 @@ class _RoleViewState extends State<RoleView> {
     );
   }
 
-  void _navigateToQRScanner(String uuid, ion.Signal signal) {
+  void _navigateToQRScanner(String uuid, String addr) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return QRScannerView(uuid: uuid, signal: signal);
+          return QRScannerView(uuid: uuid, addr: addr);
         },
       ),
     );
   }
 
-  void _navigateToHost(String sid, ion.Client client, String uuid) {
+  void _navigateToHost(String sid, String addr, String uuid) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return HostView(uuid: uuid, client: client, sid: sid);
+          return HostView(uuid: uuid, addr: addr, sid: sid);
         },
       ),
     );

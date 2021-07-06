@@ -9,10 +9,10 @@ class QRScannerView extends StatefulWidget {
   const QRScannerView({
     Key? key,
     required this.uuid,
-    required this.signal,
+    required this.addr,
   }) : super(key: key);
 
-  final ion.Signal signal;
+  final String addr;
   final String uuid;
 
   @override
@@ -23,6 +23,8 @@ class _QRScannerViewState extends State<QRScannerView> {
   Barcode? result;
   QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+
+  ion.GRPCWebSignal? signal;
 
   // In order to get hot reload to work we need to pause the camera if the platform
   // is android, or resume the camera if the platform is iOS.
@@ -44,10 +46,11 @@ class _QRScannerViewState extends State<QRScannerView> {
       ),
       body: _buildQrView(context, onScan: (sessionID) async {
         if (!scanned) {
+          this.signal = ion.GRPCWebSignal(widget.addr);
           final client = await ion.Client.create(
             sid: sessionID,
             uid: widget.uuid,
-            signal: widget.signal,
+            signal: this.signal!,
           );
           scanned = true;
           _navigatetoCamera(widget.uuid, client);

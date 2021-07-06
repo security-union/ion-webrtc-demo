@@ -1,4 +1,6 @@
 // ignore_for_file: avoid_print
+import 'dart:async';
+import 'package:flutter_ion/flutter_ion.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
@@ -6,16 +8,13 @@ import 'package:ion_webrtc_demo/src/models/participant.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class HostView extends StatefulWidget {
-  const HostView({
-    Key? key,
-    required this.uuid,
-    required this.sid,
-    required this.client,
-  }) : super(key: key);
+  const HostView(
+      {Key? key, required this.uuid, required this.sid, required this.addr})
+      : super(key: key);
 
-  final ion.Client client;
   final String uuid;
   final String sid;
+  final String addr;
 
   @override
   State<HostView> createState() => _HostViewState();
@@ -24,15 +23,32 @@ class HostView extends StatefulWidget {
 class _HostViewState extends State<HostView> {
   final Map<String, Participant> _participants = <String, Participant>{};
 
+  Timer? timer;
+
+  Client? client;
+
+  GRPCWebSignal? signal;
+
   @override
   void initState() {
-    widget.client.ontrack = _onTrack;
+    this.createClient();
+    this.client?.ontrack = _onTrack;
     super.initState();
+  }
+
+  void createClient() async {
+    this.signal = ion.GRPCWebSignal(widget.addr);
+    this.client = await ion.Client.create(
+      sid: widget.sid,
+      uid: widget.uuid,
+      signal: this.signal!,
+    );
   }
 
   @override
   void dispose() {
-    widget.client.close();
+    this.client?.close();
+    timer?.cancel();
     super.dispose();
   }
 
