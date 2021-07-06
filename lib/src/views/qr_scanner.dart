@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_ion/flutter_ion.dart' as ion;
 import 'package:ion_webrtc_demo/src/views/camera_view.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
@@ -24,8 +23,6 @@ class _QRScannerViewState extends State<QRScannerView> {
   QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
-  ion.GRPCWebSignal? signal;
-
   // In order to get hot reload to work we need to pause the camera if the platform
   // is android, or resume the camera if the platform is iOS.
   @override
@@ -33,28 +30,19 @@ class _QRScannerViewState extends State<QRScannerView> {
     super.reassemble();
     if (Platform.isAndroid) {
       controller!.pauseCamera();
+    } else {
+      controller!.resumeCamera();
     }
-    controller!.resumeCamera();
   }
 
   @override
   Widget build(BuildContext context) {
-    bool scanned = false;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan a session QR'),
       ),
       body: _buildQrView(context, onScan: (sessionID) async {
-        if (!scanned) {
-          this.signal = ion.GRPCWebSignal(widget.addr);
-          final client = await ion.Client.create(
-            sid: sessionID,
-            uid: widget.uuid,
-            signal: this.signal!,
-          );
-          scanned = true;
-          _navigatetoCamera(widget.uuid, client);
-        }
+        await _navigatetoCamera(widget.uuid, sessionID, widget.addr);
       }),
     );
   }
@@ -87,27 +75,35 @@ class _QRScannerViewState extends State<QRScannerView> {
     QRViewController controller, {
     required Function(String) onScan,
   }) {
-    setState(() {
-      this.controller = controller;
-    });
-    controller.scannedDataStream.listen((scanData) {
+    controller.scannedDataStream.listen((scanData) async {
       final sessionId = scanData.code;
       onScan.call(sessionId);
+      await controller.stopCamera();
     });
   }
 
   @override
-  void dispose() {
-    controller?.dispose();
+  Future<void> dispose() async {
+    try {
+      await controller?.stopCamera();
+    } catch (e) {} finally {
+      controller?.dispose();
+    }
     super.dispose();
   }
 
-  void _navigatetoCamera(String uuid, ion.Client client) {
+  Future<void> _navigatetoCamera(
+      String uuid, String sessionId, String addr) async {
+    try {
+      await controller?.stopCamera();
+    } catch (e) {} finally {
+      controller?.dispose();
+    }
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return CameraView(uuid: uuid, client: client);
+          return CameraView(uuid: uuid, sessionId: sessionId, addr: addr);
         },
       ),
     );

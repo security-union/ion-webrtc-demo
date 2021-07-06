@@ -4,15 +4,16 @@ import 'package:flutter_ion/flutter_ion.dart' as ion;
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class CameraView extends StatefulWidget {
-  const CameraView({
-    Key? key,
-    required this.uuid,
-    required this.client,
-  }) : super(key: key);
+  const CameraView(
+      {Key? key,
+      required this.uuid,
+      required this.sessionId,
+      required this.addr})
+      : super(key: key);
 
-  final ion.Client client;
   final String uuid;
-
+  final String addr;
+  final String sessionId;
   @override
   State<CameraView> createState() => _CameraViewState();
 }
@@ -20,6 +21,8 @@ class CameraView extends StatefulWidget {
 class _CameraViewState extends State<CameraView> {
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   ion.LocalStream? _localStream;
+  ion.GRPCWebSignal? signal;
+  ion.Client? client;
 
   @override
   void initState() {
@@ -29,7 +32,8 @@ class _CameraViewState extends State<CameraView> {
 
   @override
   void dispose() {
-    widget.client.close();
+    this.client!.close();
+    this.signal!.close();
     super.dispose();
   }
 
@@ -44,6 +48,12 @@ class _CameraViewState extends State<CameraView> {
   }
 
   Future<void> _startSharingCamera() async {
+    this.signal = ion.GRPCWebSignal(widget.addr);
+    this.client = await ion.Client.create(
+      sid: widget.sessionId,
+      uid: widget.uuid,
+      signal: this.signal!,
+    );
     await _localRenderer.initialize();
     final localStream = await ion.LocalStream.getUserMedia(
       constraints: ion.Constraints.defaults..simulcast = false,
@@ -52,6 +62,6 @@ class _CameraViewState extends State<CameraView> {
       _localStream = localStream;
       _localRenderer.srcObject = _localStream!.stream;
     });
-    await widget.client.publish(_localStream!);
+    await this.client!.publish(_localStream!);
   }
 }
