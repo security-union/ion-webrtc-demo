@@ -31,9 +31,11 @@ class _CameraViewState extends State<CameraView> {
   }
 
   @override
-  void dispose() {
-    this.client!.close();
-    this.signal!.close();
+  Future<void> dispose() async {
+    await this._localStream?.unpublish();
+    await this._localRenderer.dispose();
+    this.client?.close();
+    this.signal?.close();
     super.dispose();
   }
 
@@ -62,6 +64,6 @@ class _CameraViewState extends State<CameraView> {
       _localStream = localStream;
       _localRenderer.srcObject = _localStream!.stream;
     });
-    await this.client!.publish(_localStream!);
+    await this.client?.publish(_localStream!);
   }
 }

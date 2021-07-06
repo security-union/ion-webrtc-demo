@@ -60,8 +60,10 @@ class _QRScannerViewState extends State<QRScannerView> {
     // we need to listen for Flutter SizeChanged notification and update controller
     return QRView(
       key: qrKey,
-      onQRViewCreated: (controller) =>
-          _onQRViewCreated(controller, onScan: onScan),
+      onQRViewCreated: (controller) {
+        this.controller = controller;
+        _onQRViewCreated(controller, onScan: onScan);
+      },
       overlay: QrScannerOverlayShape(
           borderColor: Colors.red,
           borderRadius: 10,
@@ -77,8 +79,8 @@ class _QRScannerViewState extends State<QRScannerView> {
   }) {
     controller.scannedDataStream.listen((scanData) async {
       final sessionId = scanData.code;
-      onScan.call(sessionId);
       await controller.stopCamera();
+      onScan.call(sessionId);
     });
   }
 
