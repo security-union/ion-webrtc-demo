@@ -50,8 +50,8 @@ class _CameraViewState extends State<CameraView> {
   }
 
   Future<void> _startSharingCamera() async {
-    this.signal = ion.GRPCWebSignal(widget.addr);
-    this.client = await ion.Client.create(
+    final signal = ion.GRPCWebSignal(widget.addr);
+    final client = await ion.Client.create(
       sid: widget.sessionId,
       uid: widget.uuid,
       signal: this.signal!,
@@ -61,6 +61,8 @@ class _CameraViewState extends State<CameraView> {
       constraints: ion.Constraints.defaults..simulcast = false,
     );
     setState(() {
+      this.signal = signal;
+      this.client = client;
       _localStream = localStream;
       _localRenderer.srcObject = _localStream!.stream;
     });

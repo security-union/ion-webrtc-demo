@@ -61,7 +61,9 @@ class _QRScannerViewState extends State<QRScannerView> {
     return QRView(
       key: qrKey,
       onQRViewCreated: (controller) {
-        this.controller = controller;
+        setState(() {
+          this.controller = controller;
+        });
         _onQRViewCreated(controller, onScan: onScan);
       },
       overlay: QrScannerOverlayShape(

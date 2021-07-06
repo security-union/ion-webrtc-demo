@@ -47,6 +47,7 @@ class _HostViewState extends State<HostView> {
 
   @override
   void dispose() {
+    this.signal?.close();
     this.client?.close();
     timer?.cancel();
     super.dispose();
