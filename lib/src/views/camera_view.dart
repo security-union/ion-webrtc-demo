@@ -21,8 +21,8 @@ class CameraView extends StatefulWidget {
 class _CameraViewState extends State<CameraView> {
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   ion.LocalStream? _localStream;
-  ion.GRPCWebSignal? signal;
-  ion.Client? client;
+  ion.GRPCWebSignal? _signal;
+  ion.Client? _client;
 
   @override
   void initState() {
@@ -32,10 +32,10 @@ class _CameraViewState extends State<CameraView> {
 
   @override
   Future<void> dispose() async {
-    await this._localStream?.unpublish();
-    await this._localRenderer.dispose();
-    this.client?.close();
-    this.signal?.close();
+    await _localStream?.unpublish();
+    await _localRenderer.dispose();
+    _client?.close();
+    _signal?.close();
     super.dispose();
   }
 
@@ -54,18 +54,18 @@ class _CameraViewState extends State<CameraView> {
     final client = await ion.Client.create(
       sid: widget.sessionId,
       uid: widget.uuid,
-      signal: this.signal!,
+      signal: signal,
     );
     await _localRenderer.initialize();
     final localStream = await ion.LocalStream.getUserMedia(
       constraints: ion.Constraints.defaults..simulcast = false,
     );
     setState(() {
-      this.signal = signal;
-      this.client = client;
+      _signal = signal;
+      _client = client;
       _localStream = localStream;
       _localRenderer.srcObject = _localStream!.stream;
     });
-    await this.client?.publish(_localStream!);
+    await _client!.publish(_localStream!);
   }
 }

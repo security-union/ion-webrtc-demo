@@ -25,30 +25,30 @@ class _HostViewState extends State<HostView> {
 
   Timer? timer;
 
-  Client? client;
+  Client? _client;
 
-  GRPCWebSignal? signal;
+  GRPCWebSignal? _signal;
 
   @override
   void initState() {
-    this.createClient();
-    this.client?.ontrack = _onTrack;
+    _initClient();
+    _client?.ontrack = _onTrack;
     super.initState();
   }
 
-  void createClient() async {
-    this.signal = ion.GRPCWebSignal(widget.addr);
-    this.client = await ion.Client.create(
+  void _initClient() async {
+    _signal = ion.GRPCWebSignal(widget.addr);
+    _client = await ion.Client.create(
       sid: widget.sid,
       uid: widget.uuid,
-      signal: this.signal!,
+      signal: _signal!,
     );
   }
 
   @override
   void dispose() {
-    this.signal?.close();
-    this.client?.close();
+    _signal?.close();
+    _client?.close();
     timer?.cancel();
     super.dispose();
   }

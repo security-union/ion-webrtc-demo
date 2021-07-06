@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +21,8 @@ class QRScannerView extends StatefulWidget {
 }
 
 class _QRScannerViewState extends State<QRScannerView> {
-  Barcode? result;
-  QRViewController? controller;
+  Barcode? _result;
+  QRViewController? _controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
   // In order to get hot reload to work we need to pause the camera if the platform
@@ -29,9 +31,9 @@ class _QRScannerViewState extends State<QRScannerView> {
   void reassemble() {
     super.reassemble();
     if (Platform.isAndroid) {
-      controller!.pauseCamera();
+      _controller!.pauseCamera();
     } else {
-      controller!.resumeCamera();
+      _controller!.resumeCamera();
     }
   }
 
@@ -42,7 +44,7 @@ class _QRScannerViewState extends State<QRScannerView> {
         title: const Text('Scan a session QR'),
       ),
       body: _buildQrView(context, onScan: (sessionID) async {
-        await _navigatetoCamera(widget.uuid, sessionID, widget.addr);
+        await _navigateToCamera(widget.uuid, sessionID, widget.addr);
       }),
     );
   }
@@ -62,7 +64,7 @@ class _QRScannerViewState extends State<QRScannerView> {
       key: qrKey,
       onQRViewCreated: (controller) {
         setState(() {
-          this.controller = controller;
+          _controller = controller;
         });
         _onQRViewCreated(controller, onScan: onScan);
       },
@@ -88,21 +90,16 @@ class _QRScannerViewState extends State<QRScannerView> {
 
   @override
   Future<void> dispose() async {
-    try {
-      await controller?.stopCamera();
-    } catch (e) {} finally {
-      controller?.dispose();
-    }
+    await _closeCamera();
     super.dispose();
   }
 
-  Future<void> _navigatetoCamera(
-      String uuid, String sessionId, String addr) async {
-    try {
-      await controller?.stopCamera();
-    } catch (e) {} finally {
-      controller?.dispose();
-    }
+  Future<void> _navigateToCamera(
+    String uuid,
+    String sessionId,
+    String addr,
+  ) async {
+    await _closeCamera();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -111,5 +108,15 @@ class _QRScannerViewState extends State<QRScannerView> {
         },
       ),
     );
+  }
+
+  Future<void> _closeCamera() async {
+    try {
+      await _controller?.stopCamera();
+    } catch (e) {
+      print('Error stopping camera');
+    } finally {
+      _controller?.dispose();
+    }
   }
 }
