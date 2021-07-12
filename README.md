@@ -1,6 +1,6 @@
 ## Ion WebRTC Demo
 
-For now this demo is a Many to Many (on a room) webRTC call implementation with ion.
+This demo is a N to 1 per session webRTC call implementation with ion.
 
 First, execute the ion SFU server on your computer:
 
@@ -51,9 +51,6 @@ final localStream = await ion.LocalStream.getUserMedia(
 );
 
 await client.publish(_localStream);
-``` 
+```
 
-
-
-
-
+To setup the QR code scanner in iOs follow the instructions described [here](https://pub.dev/packages/flutter_barcode_scanner) 

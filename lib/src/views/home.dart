@@ -1,9 +1,10 @@
 // ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
-import 'package:ion_webrtc_demo/src/models/Participant.dart';
+import 'package:ion_webrtc_demo/src/styles/colors.dart';
+import 'package:ion_webrtc_demo/src/styles/text.dart';
+import 'package:ion_webrtc_demo/src/views/role_view.dart';
+import 'package:ion_webrtc_demo/src/widgets/rounded_button.dart';
 import 'package:uuid/uuid.dart';
 
 class Home extends StatefulWidget {
@@ -16,25 +17,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  // Map of session participants
-  final Map<String, Participant> _plist = {};
-  // WebRTC Native video renderers
-  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
-  // ion SDK objects to perform the signaling & connection through the ionSfu server
-  ion.Client? _client;
-  ion.LocalStream? _localStream;
   // Our device Unique identifier
   final String _uuid = const Uuid().v4();
-
-  ///
-  /// STATE METHODS & WIDGETS
-  ///
-  @override
-  void initState() {
-    super.initState();
-    // Initialize the native WebRTC video renderers
-    _initRenderers().then((value) => _initSfu("Test room", _uuid));
-  }
+  final _formKey = GlobalKey<FormState>();
+  String _addr = '';
 
   @override
   Widget build(BuildContext context) {
@@ -43,79 +29,83 @@ class _HomeState extends State<Home> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(child: RTCVideoView(_localRenderer)),
-            ..._plist.values.map((value) => Expanded(
-                  child: RTCVideoView(value.renderer),
-                )),
-          ],
+        child: Container(
+          padding: const EdgeInsets.all(50.0),
+          child: _sfuAddrForm(
+            _formKey,
+            onUpdateAddr: (String addr) => setState(() => _addr = addr),
+            onValidSubmit: () {
+              _navigateToRoleView(_uuid, _addr);
+            },
+          ),
         ),
       ),
-      floatingActionButton: _floatingButton(),
     );
   }
 
-  Widget _floatingButton() {
-    return FloatingActionButton(
-      onPressed: _startSharingCamera,
-      child: const Icon(Icons.ondemand_video),
+  Widget _sfuAddrForm(
+    GlobalKey<FormState> formKey, {
+    required Function(String) onUpdateAddr,
+    required Function() onValidSubmit,
+  }) =>
+      Form(
+        key: formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          children: <Widget>[
+            const SizedBox(height: 30.0),
+            _urlField(
+              'SFU Address',
+              onChanged: onUpdateAddr,
+            ),
+            const SizedBox(height: 30.0),
+            _submitButton('Enter', formKey, onValidSubmit: onValidSubmit),
+          ],
+        ),
+      );
+
+  Widget _urlField(
+    String label, {
+    required Function(String) onChanged,
+  }) =>
+      TextFormField(
+        keyboardType: TextInputType.url,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: subtitle,
+        ),
+        validator: _validateURL,
+        onChanged: onChanged,
+      );
+
+  Widget _submitButton(
+    String text,
+    GlobalKey<FormState> formKey, {
+    required Function() onValidSubmit,
+  }) =>
+      roundedButton(
+        text: 'Enter',
+        color: AppColors.primaryBlue,
+        onPressed: () {
+          if (formKey.currentState!.validate()) {
+            formKey.currentState!.save();
+            onValidSubmit();
+          }
+        },
+      );
+
+  void _navigateToRoleView(String uuid, String addr) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext context) {
+          return RoleView(uuid: uuid, addr: addr);
+        },
+      ),
     );
   }
 
-  ///
-  /// APP LOGIC METHODS
-  ///
-
-  Future<void> _initRenderers() async {
-    await _localRenderer.initialize();
-  }
-
-  // Execute the signaling with the SFU server
-  // and set behaviour for when receive remote non-data streams (webRTC streams can be 'video' or 'data')
-  _initSfu(String sid, String uid) async {
-    final _signal = await _getUrl();
-    _client = await ion.Client.create(
-      sid: sid, // Session id
-      uid: uid, // Send our UUID so the server knows who we are
-      signal: _signal, // Signaling object pointing to the SFU server
-    );
-    _client?.ontrack = (track, ion.RemoteStream remoteStream) async {
-      if (track.kind == 'video') {
-        print('ontrack: remote stream => ${remoteStream.id}');
-        final remoteRenderer = RTCVideoRenderer();
-        await remoteRenderer.initialize();
-        setState(() {
-          remoteRenderer.srcObject = remoteStream.stream;
-          _plist[remoteStream.id] = Participant(
-            remoteStream.id,
-            remoteRenderer,
-            remoteStream.stream,
-          );
-        });
-      }
-    };
-  }
-
-  void _startSharingCamera() async {
-    _localStream = await ion.LocalStream.getUserMedia(
-      constraints: ion.Constraints.defaults..simulcast = false,
-    );
-
-    setState(() {
-      _localRenderer.srcObject = _localStream?.stream;
-    });
-
-    await _client?.publish(_localStream!);
-  }
-
-  // Get the GRPC signaling object pointing to the SFU server
-  _getUrl() {
-    if (kIsWeb) {
-      return ion.GRPCWebSignal('http://localhost:9090');
-    } else {
-      return ion.GRPCWebSignal('http://192.168.1.46:9090');
-    }
+  String? _validateURL(String? value) {
+    return (value != null && value.length > 1) ? null : 'Empty url';
   }
 }
