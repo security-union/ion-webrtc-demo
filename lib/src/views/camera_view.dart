@@ -14,58 +14,62 @@ class CameraView extends StatefulWidget {
   final String uuid;
   final String addr;
   final String sessionId;
+
   @override
   State<CameraView> createState() => _CameraViewState();
 }
 
 class _CameraViewState extends State<CameraView> {
-  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
-  ion.LocalStream? _localStream;
-  ion.GRPCWebSignal? _signal;
   ion.Client? _client;
+  ion.LocalStream? _localStream;
+  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
+  ion.Signal? _signal;
 
   @override
   void initState() {
-    _startSharingCamera();
+    _initClient();
     super.initState();
   }
 
   @override
-  Future<void> dispose() async {
-    await _localStream?.unpublish();
-    await _localRenderer.dispose();
-    _client?.close();
+  void dispose() {
+    _localStream?.unpublish();
+    _localRenderer.dispose();
     _signal?.close();
+    _client?.close();
     super.dispose();
+  }
+
+  void _initClient() async {
+    print("serverurl " + widget.addr);
+    _signal = ion.GRPCWebSignal(widget.addr);
+    // create new client
+    _client = await ion.Client.create(
+        sid: widget.sessionId, uid: widget.uuid, signal: _signal!);
+    // create get user camera stream
+    _localStream = await ion.LocalStream.getUserMedia(
+        constraints: ion.Constraints.defaults..simulcast = false);
+    // publish the stream
+    await _client?.publish(_localStream!);
+    await _localRenderer.initialize();
+    setState(() {
+      _localRenderer.srcObject = _localStream?.stream;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('You are a Camera'),
+        title: const Text('You are the camera'),
       ),
-      body: RTCVideoView(_localRenderer, mirror: true),
+      body: Container(
+        padding: const EdgeInsets.all(10.0),
+        child: RTCVideoView(
+          _localRenderer,
+          objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+        ),
+      ),
     );
-  }
-
-  Future<void> _startSharingCamera() async {
-    final signal = ion.GRPCWebSignal(widget.addr);
-    final client = await ion.Client.create(
-      sid: widget.sessionId,
-      uid: widget.uuid,
-      signal: signal,
-    );
-    await _localRenderer.initialize();
-    final localStream = await ion.LocalStream.getUserMedia(
-      constraints: ion.Constraints.defaults..simulcast = false,
-    );
-    setState(() {
-      _signal = signal;
-      _client = client;
-      _localStream = localStream;
-      _localRenderer.srcObject = _localStream!.stream;
-    });
-    await _client!.publish(_localStream!);
   }
 }

@@ -1,6 +1,4 @@
 // ignore_for_file: avoid_print
-import 'dart:async';
-import 'package:flutter_ion/flutter_ion.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
@@ -21,35 +19,20 @@ class HostView extends StatefulWidget {
 }
 
 class _HostViewState extends State<HostView> {
-  final Map<String, Participant> _participants = <String, Participant>{};
-
-  Timer? timer;
-
-  Client? _client;
-
-  GRPCWebSignal? _signal;
+  List<Participant> plist = <Participant>[];
+  ion.Client? _client;
+  ion.Signal? _signal;
 
   @override
   void initState() {
-    _initClient();
-    _client?.ontrack = _onTrack;
+    _startSession();
     super.initState();
-  }
-
-  void _initClient() async {
-    _signal = ion.GRPCWebSignal(widget.addr);
-    _client = await ion.Client.create(
-      sid: widget.sid,
-      uid: widget.uuid,
-      signal: _signal!,
-    );
   }
 
   @override
   void dispose() {
     _signal?.close();
     _client?.close();
-    timer?.cancel();
     super.dispose();
   }
 
@@ -69,10 +52,7 @@ class _HostViewState extends State<HostView> {
             body: TabBarView(
               children: <Widget>[
                 _qrCode(widget.sid),
-                _remotesView(
-                  context,
-                  _participants.values.map((e) => e.renderer).toList(),
-                )
+                _remotesView(context),
               ],
             )),
       );
@@ -87,30 +67,66 @@ class _HostViewState extends State<HostView> {
         ),
       );
 
-  Widget _remotesView(BuildContext context, List<RTCVideoRenderer> renderers) =>
-      Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ...renderers.map((value) => Expanded(
-                child: RTCVideoView(value),
-              )),
-        ],
-      );
+  Widget _remotesView(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      child: GridView.builder(
+        shrinkWrap: true,
+        itemCount: plist.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 5.0,
+          crossAxisSpacing: 5.0,
+          childAspectRatio: 1.0,
+        ),
+        itemBuilder: (BuildContext context, int index) {
+          return _getItemView(plist[index]);
+        },
+      ),
+    );
+  }
 
-  _onTrack(MediaStreamTrack track, ion.RemoteStream remoteStream) async {
-    if (track.kind == 'video') {
-      print('ontrack: remote stream => ${remoteStream.id}');
-      final remoteRenderer = RTCVideoRenderer();
-      await remoteRenderer.initialize();
-      print(remoteStream.id);
-      remoteRenderer.srcObject = remoteStream.stream;
-      setState(() {
-        _participants[remoteStream.id] = Participant(
-          remoteStream.id,
-          remoteRenderer,
-          remoteStream.stream,
-        );
-      });
-    }
+  Widget _getItemView(Participant item) {
+    print("items: " + item.toString());
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${item.title}:\n${item.stream!.id}',
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+          ),
+          Expanded(
+            child: RTCVideoView(item.renderer,
+                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startSession() async {
+    _signal = ion.GRPCWebSignal(widget.addr);
+    print("serverurl " + widget.addr);
+    // create new client
+    _client = await ion.Client.create(
+        sid: widget.sid, uid: widget.uuid, signal: _signal!);
+
+    // peer ontrack
+    _client?.ontrack = (track, ion.RemoteStream remoteStream) async {
+      if (track.kind == 'video') {
+        print('remote stream id:  ${remoteStream.id}');
+        print('ontrack: remote stream: ${remoteStream.stream}');
+        var renderer = RTCVideoRenderer();
+        await renderer.initialize();
+        renderer.srcObject = remoteStream.stream;
+        setState(() {
+          plist.add(Participant('RemoteStream', renderer, remoteStream.stream));
+        });
+      }
+    };
   }
 }
