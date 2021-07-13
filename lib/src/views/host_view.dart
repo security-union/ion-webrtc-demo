@@ -70,7 +70,23 @@ class _HostViewState extends State<HostView> {
   Widget _remotesView(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(10.0),
-      child: GridView.builder(
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.hardEdge,
+        children: [
+          _camerasGrid(context),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: _actionButtons(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _camerasGrid(BuildContext context) => GridView.builder(
         shrinkWrap: true,
         itemCount: plist.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -82,28 +98,37 @@ class _HostViewState extends State<HostView> {
         itemBuilder: (BuildContext context, int index) {
           return _getItemView(plist[index]);
         },
-      ),
-    );
-  }
+      );
+
+  Widget _actionButtons(BuildContext context) => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(5),
+            child: FloatingActionButton(
+              onPressed: () => print('Photo'),
+              child: const Icon(Icons.photo_camera),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(5),
+            child: FloatingActionButton(
+              onPressed: () => print('Video'),
+              child: const Icon(Icons.video_camera_front),
+            ),
+          ),
+        ],
+      );
 
   Widget _getItemView(Participant item) {
     print("items: " + item.toString());
     return Container(
       padding: const EdgeInsets.all(10.0),
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '${item.title}:\n${item.stream!.id}',
-              style: const TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-          ),
-          Expanded(
-            child: RTCVideoView(item.renderer,
-                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain),
-          ),
-        ],
+      child: Expanded(
+        child: RTCVideoView(
+          item.renderer,
+          objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+        ),
       ),
     );
   }

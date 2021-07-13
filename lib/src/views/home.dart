@@ -1,6 +1,5 @@
 // ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
-import 'package:flutter_ion/flutter_ion.dart' as ion;
 import 'package:ion_webrtc_demo/src/styles/colors.dart';
 import 'package:ion_webrtc_demo/src/styles/text.dart';
 import 'package:ion_webrtc_demo/src/views/role_view.dart';
