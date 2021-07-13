@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'package:ion_webrtc_demo/src/styles/colors.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
@@ -38,25 +39,49 @@ class _HostViewState extends State<HostView> {
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 2,
-        child: Scaffold(
-            appBar: AppBar(
-              title: const Text('You are the Host'),
-              bottom: const TabBar(
-                tabs: <Widget>[
-                  Tab(text: 'QRCode'),
-                  Tab(text: 'Cameras'),
-                ],
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('You are the Host'),
+          bottom: const TabBar(
+            tabs: <Widget>[
+              Tab(text: 'QRCode'),
+              Tab(text: 'Cameras'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            _qrCode(widget.sid),
+            _remotesView(context),
+          ],
+        ),
+        bottomNavigationBar: _bottomView(),
+      ));
+
+  Widget _bottomView() => Container(
+        padding: const EdgeInsets.all(0.0),
+        color: AppColors.darkDefaultColor,
+        height: 100,
+        child: Column(
+          children: <Widget>[
+            Center(
+              child: IconButton(
+                icon: Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 60.0,
+                ),
+                iconSize: 80,
+                splashColor: Colors.blue,
+                onPressed: () {
+                  print('"sdafasdf');
+                },
               ),
             ),
-            body: TabBarView(
-              children: <Widget>[
-                _qrCode(widget.sid),
-                _remotesView(context),
-              ],
-            )),
+          ],
+        ),
       );
-
   Widget _qrCode(String content) => Container(
         decoration: const BoxDecoration(color: Colors.white),
         alignment: Alignment.center,
