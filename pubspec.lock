@@ -14,7 +14,7 @@ packages:
       name: async
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.5.0"
+    version: "2.6.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -107,10 +107,12 @@ packages:
   flutter_ion:
     dependency: "direct main"
     description:
-      name: flutter_ion
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.5.1"
+      path: "."
+      ref: master
+      resolved-ref: "9f36afe4a6900facbac833fdcc8894023b017148"
+      url: "git@github.com:security-union/ion-sdk-flutter.git"
+    source: git
+    version: "0.5.2"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -131,9 +133,11 @@ packages:
   flutter_webrtc:
     dependency: transitive
     description:
-      name: flutter_webrtc
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "."
+      ref: master
+      resolved-ref: "76891a05b99f50f04b05418574e55f67d6403eab"
+      url: "git@github.com:security-union/flutter-webrtc.git"
+    source: git
     version: "0.6.5"
   googleapis_auth:
     dependency: transitive
@@ -314,7 +318,7 @@ packages:
       name: source_span
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.8.0"
+    version: "1.8.1"
   stack_trace:
     dependency: transitive
     description:
@@ -349,7 +353,7 @@ packages:
       name: test_api
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.19"
+    version: "0.3.0"
   typed_data:
     dependency: transitive
     description:
