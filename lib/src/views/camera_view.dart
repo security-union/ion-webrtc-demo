@@ -66,12 +66,13 @@ class _CameraViewState extends State<CameraView> {
     var localDataInit = RTCDataChannelInit();
     localDataInit.binaryType = 'text';
     localDataInit.id = 42314;
-    _localDataChannel =
+    var localDataChannel =
         await _client?.createDataChannel(COMMANDS_CHANNEL_LABEL, localDataInit);
-    _localDataChannel?.onDataChannelState = (RTCDataChannelState state) {
+    localDataChannel?.onDataChannelState = (RTCDataChannelState state) {
+      print("data socket state changed ${state}");
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
         print("imageslocalDataChannel socket state changed ${state}");
-        _localDataChannel!.messageStream
+        localDataChannel!.messageStream
             .forEach((RTCDataChannelMessage msg) async {
           print("got msg ${msg.text}");
           final json = JsonDecoder();
@@ -88,23 +89,25 @@ class _CameraViewState extends State<CameraView> {
         });
       }
     };
-    var init = RTCDataChannelInit();
-    init.binaryType = 'binary';
-    init.id = 213;
-    _imagesDataChannel =
-        await _client?.createDataChannel(IMAGE_BINARY_CHANNEL, init);
-    _imagesDataChannel!.onDataChannelState = (RTCDataChannelState state) {
-      print("images socket state changed ${state}");
-      if (state == RTCDataChannelState.RTCDataChannelOpen) {
-        _imagesDataChannel!.messageStream
-            .forEach((RTCDataChannelMessage msg) async {
-          print("image onMessage ${msg.binary.length}");
-        });
-      }
-    };
+    // var init = RTCDataChannelInit();
+    // init.binaryType = 'binary';
+    // init.id = 213;
+    // var imagesDataChannel =
+    //     await _client?.createDataChannel(IMAGE_BINARY_CHANNEL);
+    // imagesDataChannel!.onDataChannelState = (RTCDataChannelState state) {
+    //   print("data socket state changed ${state}");
+    //   if (state == RTCDataChannelState.RTCDataChannelOpen) {
+    //     imagesDataChannel.messageStream
+    //         .forEach((RTCDataChannelMessage msg) async {
+    //       print("image onMessage ${msg.binary.length}");
+    //     });
+    //   }
+    // };
 
     setState(() {
       _localRenderer.srcObject = _localStream?.stream;
+      _localDataChannel = localDataChannel;
+      // _imagesDataChannel = imagesDataChannel;
     });
   }
 

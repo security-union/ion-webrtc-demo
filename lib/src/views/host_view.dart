@@ -32,9 +32,9 @@ class _HostViewState extends State<HostView> {
   ion.Client? _client;
   ion.Signal? _signal;
 
-  RTCDataChannel? _localDataChannel;
+  late RTCDataChannel _localDataChannel;
 
-  RTCDataChannel? _imagesDataChannel;
+  late RTCDataChannel _imagesDataChannel;
 
   var _imageBuffer;
 
@@ -90,6 +90,7 @@ class _HostViewState extends State<HostView> {
                 splashColor: Colors.blue,
                 onPressed: () {
                   print('"sdafasdf');
+                  sendTakePictureCommand();
                 },
               ),
             ),
@@ -164,7 +165,7 @@ class _HostViewState extends State<HostView> {
   }
 
   void _startSession() async {
-    _signal = ion.GRPCWebSignal(widget.addr);
+    _signal = ion.JsonRPCSignal(widget.addr);
     print("serverurl " + widget.addr);
     // create new client
     _client = await ion.Client.create(
@@ -187,23 +188,28 @@ class _HostViewState extends State<HostView> {
     var localDataInit = RTCDataChannelInit();
     localDataInit.binaryType = 'text';
     localDataInit.id = 42314;
-    _localDataChannel =
-        await _client?.createDataChannel(COMMANDS_CHANNEL_LABEL, localDataInit);
-    _localDataChannel?.onDataChannelState = (RTCDataChannelState state) {
+    var localDataChannel = (await _client?.createDataChannel(
+        COMMANDS_CHANNEL_LABEL, localDataInit))!;
+    localDataChannel.onDataChannelState = (RTCDataChannelState state) {
+      print("commands socket state changed ${state}");
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
         print("commands socket state changed ${state}");
-        _localDataChannel!.messageStream
+        localDataChannel.messageStream
             .forEach((RTCDataChannelMessage msg) async {
           print("got msg ${msg.text}");
         });
       }
     };
+
+    setState(() {
+      _localDataChannel = localDataChannel;
+    });
     var init = RTCDataChannelInit();
     init.binaryType = 'binary';
     init.id = 213;
     _imagesDataChannel =
-        await _client?.createDataChannel(IMAGE_BINARY_CHANNEL, init);
-    _imagesDataChannel!.onDataChannelState = (RTCDataChannelState state) {
+        (await _client?.createDataChannel(IMAGE_BINARY_CHANNEL, init))!;
+    _imagesDataChannel.onDataChannelState = (RTCDataChannelState state) {
       print("images socket state changed ${state}");
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
         _imagesDataChannel!.messageStream
@@ -224,5 +230,13 @@ class _HostViewState extends State<HostView> {
         });
       }
     };
+  }
+
+  void sendTakePictureCommand() async {
+    await _localDataChannel.send(RTCDataChannelMessage("""
+    { 
+      "command": "takePicture"
+    }
+    """));
   }
 }
