@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'package:ion_webrtc_demo/src/views/host_camera_view.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
@@ -106,6 +107,7 @@ class _HostViewState extends State<HostView> {
           Padding(
             padding: const EdgeInsets.all(5),
             child: FloatingActionButton(
+              heroTag: null,
               onPressed: () => print('Photo'),
               child: const Icon(Icons.photo_camera),
             ),
@@ -113,6 +115,7 @@ class _HostViewState extends State<HostView> {
           Padding(
             padding: const EdgeInsets.all(5),
             child: FloatingActionButton(
+              heroTag: null,
               onPressed: () => print('Video'),
               child: const Icon(Icons.video_camera_front),
             ),
@@ -120,15 +123,26 @@ class _HostViewState extends State<HostView> {
         ],
       );
 
+  // TODO: Fix Inkwell
   Widget _getItemView(Participant item) {
     print("items: " + item.toString());
     return Container(
       padding: const EdgeInsets.all(10.0),
-      child: Expanded(
+      child: InkWell(
         child: RTCVideoView(
           item.renderer,
           objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+          filterQuality: FilterQuality.medium,
         ),
+        onTapDown: (_) {
+          print('Tap down!');
+          _navigateToHostCameraView(
+            widget.uuid,
+            widget.sid,
+            item,
+            _client!,
+          );
+        },
       ),
     );
   }
@@ -153,5 +167,26 @@ class _HostViewState extends State<HostView> {
         });
       }
     };
+  }
+
+  void _navigateToHostCameraView(
+    String uuid,
+    String sid,
+    Participant participant,
+    ion.Client client,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext context) {
+          return HostCameraView(
+            uuid: uuid,
+            participant: participant,
+            sessionId: sid,
+            client: client,
+          );
+        },
+      ),
+    );
   }
 }
