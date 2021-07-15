@@ -87,20 +87,20 @@ class _CameraViewState extends State<CameraView> {
         });
       }
     };
-    // var init = RTCDataChannelInit();
-    // init.binaryType = 'binary';
-    // init.id = 213;
-    // _imagesDataChannel =
-    //     await _client?.createDataChannel(IMAGE_BINARY_CHANNEL, init);
-    // _imagesDataChannel!.onDataChannelState = (RTCDataChannelState state) {
-    //   print("images socket state changed ${state}");
-    //   if (state == RTCDataChannelState.RTCDataChannelOpen) {
-    //     _imagesDataChannel!.messageStream
-    //         .forEach((RTCDataChannelMessage msg) async {
-    //       print("image onMessage ${msg.binary.length}");
-    //     });
-    //   }
-    // };
+    var init = RTCDataChannelInit();
+    init.binaryType = 'binary';
+    init.id = 213;
+    _imagesDataChannel =
+        await _client?.createDataChannel(IMAGE_BINARY_CHANNEL, init);
+    _imagesDataChannel!.onDataChannelState = (RTCDataChannelState state) {
+      print("images socket state changed ${state}");
+      if (state == RTCDataChannelState.RTCDataChannelOpen) {
+        _imagesDataChannel!.messageStream
+            .forEach((RTCDataChannelMessage msg) async {
+          print("image onMessage ${msg.binary.length}");
+        });
+      }
+    };
 
     // publish the stream
     await _client?.publish(_localStream!);
@@ -124,11 +124,11 @@ class _CameraViewState extends State<CameraView> {
       var upperLimit = (i + MAXIMUM_MESSAGE_SIZE > sizeInBytes)
           ? sizeInBytes
           : (i + MAXIMUM_MESSAGE_SIZE);
-      // await _imagesDataChannel!
-      //     .send(RTCDataChannelMessage.fromBinary(bytes.sublist(i, upperLimit)));
+      await _imagesDataChannel!
+          .send(RTCDataChannelMessage.fromBinary(bytes.sublist(i, upperLimit)));
     }
-    // await _imagesDataChannel!
-    //     .send(RTCDataChannelMessage.fromBinary(END_OF_FILE_MESSAGE));
+    await _imagesDataChannel!
+        .send(RTCDataChannelMessage.fromBinary(END_OF_FILE_MESSAGE));
 
     print("sent bytes...");
   }
