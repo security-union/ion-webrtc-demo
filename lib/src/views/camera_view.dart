@@ -8,6 +8,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'host_view.dart';
 
 int MAXIMUM_MESSAGE_SIZE = 65000;
+final IMAGE_BINARY_CHANNEL = "IMAGE_BINARY_CHANNEL";
 
 class CameraView extends StatefulWidget {
   const CameraView(
@@ -52,16 +53,13 @@ class _CameraViewState extends State<CameraView> {
 
   void _initClient() async {
     print("serverurl " + widget.addr);
-    _signal = ion.GRPCWebSignal(widget.addr);
+    _signal = ion.JsonRPCSignal(widget.addr);
     // create new client
     _client = await ion.Client.create(
         sid: widget.sessionId, uid: widget.uuid, signal: _signal!);
     // create get user camera stream
     _localStream = await ion.LocalStream.getUserMedia(
         constraints: ion.Constraints.defaults..simulcast = false);
-    // publish the stream
-    await _client?.publish(_localStream!);
-    await _localRenderer.initialize();
 
     var localDataInit = RTCDataChannelInit();
     localDataInit.binaryType = 'text';
@@ -92,22 +90,25 @@ class _CameraViewState extends State<CameraView> {
     // var init = RTCDataChannelInit();
     // init.binaryType = 'binary';
     // init.id = 213;
-    // var imagesDataChannel =
-    //     await _client?.createDataChannel(IMAGE_BINARY_CHANNEL);
-    // imagesDataChannel!.onDataChannelState = (RTCDataChannelState state) {
-    //   print("data socket state changed ${state}");
+    // _imagesDataChannel =
+    //     await _client?.createDataChannel(IMAGE_BINARY_CHANNEL, init);
+    // _imagesDataChannel!.onDataChannelState = (RTCDataChannelState state) {
+    //   print("images socket state changed ${state}");
     //   if (state == RTCDataChannelState.RTCDataChannelOpen) {
-    //     imagesDataChannel.messageStream
+    //     _imagesDataChannel!.messageStream
     //         .forEach((RTCDataChannelMessage msg) async {
     //       print("image onMessage ${msg.binary.length}");
     //     });
     //   }
     // };
 
+    // publish the stream
+    await _client?.publish(_localStream!);
+    await _localRenderer.initialize();
+
     setState(() {
       _localRenderer.srcObject = _localStream?.stream;
       _localDataChannel = localDataChannel;
-      // _imagesDataChannel = imagesDataChannel;
     });
   }
 
@@ -123,11 +124,11 @@ class _CameraViewState extends State<CameraView> {
       var upperLimit = (i + MAXIMUM_MESSAGE_SIZE > sizeInBytes)
           ? sizeInBytes
           : (i + MAXIMUM_MESSAGE_SIZE);
-      await _imagesDataChannel!
-          .send(RTCDataChannelMessage.fromBinary(bytes.sublist(i, upperLimit)));
+      // await _imagesDataChannel!
+      //     .send(RTCDataChannelMessage.fromBinary(bytes.sublist(i, upperLimit)));
     }
-    await _imagesDataChannel!
-        .send(RTCDataChannelMessage.fromBinary(END_OF_FILE_MESSAGE));
+    // await _imagesDataChannel!
+    //     .send(RTCDataChannelMessage.fromBinary(END_OF_FILE_MESSAGE));
 
     print("sent bytes...");
   }

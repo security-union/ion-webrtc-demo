@@ -188,22 +188,19 @@ class _HostViewState extends State<HostView> {
     var localDataInit = RTCDataChannelInit();
     localDataInit.binaryType = 'text';
     localDataInit.id = 42314;
-    var localDataChannel = (await _client?.createDataChannel(
+    _localDataChannel = (await _client?.createDataChannel(
         COMMANDS_CHANNEL_LABEL, localDataInit))!;
-    localDataChannel.onDataChannelState = (RTCDataChannelState state) {
+    _localDataChannel.onDataChannelState = (RTCDataChannelState state) {
       print("commands socket state changed ${state}");
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
         print("commands socket state changed ${state}");
-        localDataChannel.messageStream
+        _localDataChannel.messageStream
             .forEach((RTCDataChannelMessage msg) async {
           print("got msg ${msg.text}");
         });
       }
     };
 
-    setState(() {
-      _localDataChannel = localDataChannel;
-    });
     var init = RTCDataChannelInit();
     init.binaryType = 'binary';
     init.id = 213;
