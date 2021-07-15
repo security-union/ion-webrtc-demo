@@ -21,7 +21,6 @@ class QRScannerView extends StatefulWidget {
 }
 
 class _QRScannerViewState extends State<QRScannerView> {
-  Barcode? _result;
   QRViewController? _controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
@@ -86,12 +85,6 @@ class _QRScannerViewState extends State<QRScannerView> {
       await controller.stopCamera();
       onScan.call(sessionId);
     });
-  }
-
-  @override
-  Future<void> dispose() async {
-    await _closeCamera();
-    super.dispose();
   }
 
   Future<void> _navigateToCamera(
