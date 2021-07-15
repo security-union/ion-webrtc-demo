@@ -44,7 +44,6 @@ class _HostCameraViewState extends State<HostCameraView> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: FloatingActionButton(
-                backgroundColor: AppColors.primaryBlue,
                 onPressed: () => print('Flash!'),
                 heroTag: null,
                 child: const Icon(Icons.flash_on),
@@ -59,9 +58,8 @@ class _HostCameraViewState extends State<HostCameraView> {
               padding: const EdgeInsets.all(8.0),
               child: FloatingActionButton(
                 onPressed: () => print('Toggle camera!'),
-                backgroundColor: AppColors.primaryBlue,
                 heroTag: null,
-                child: const Icon(Icons.toggle_on),
+                child: const Icon(Icons.cameraswitch_rounded),
               ),
             ),
           ),
@@ -75,16 +73,14 @@ class _HostCameraViewState extends State<HostCameraView> {
               children: [
                 FloatingActionButton(
                   onPressed: () => print('Photo!'),
-                  backgroundColor: AppColors.primaryBlue,
                   heroTag: null,
-                  child: const Icon(Icons.photo),
+                  child: const Icon(Icons.camera_rounded),
                 ),
                 const SizedBox(width: 10.0),
                 FloatingActionButton(
                   onPressed: () => print('Video!'),
-                  backgroundColor: AppColors.primaryBlue,
                   heroTag: null,
-                  child: const Icon(Icons.play_circle),
+                  child: const Icon(Icons.play_circle_rounded),
                 )
               ],
             ),

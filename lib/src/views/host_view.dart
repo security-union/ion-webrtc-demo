@@ -1,7 +1,5 @@
 // ignore_for_file: avoid_print
-import 'package:ion_webrtc_demo/src/styles/colors.dart';
 import 'package:ion_webrtc_demo/src/views/host_camera_view.dart';
-import 'package:ion_webrtc_demo/src/widgets/rounded_button.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
@@ -116,7 +114,7 @@ class _HostViewState extends State<HostView> {
             child: FloatingActionButton(
               heroTag: null,
               onPressed: () => print('Photo'),
-              child: const Icon(Icons.photo_camera),
+              child: const Icon(Icons.camera_rounded),
             ),
           ),
           Padding(
@@ -124,7 +122,7 @@ class _HostViewState extends State<HostView> {
             child: FloatingActionButton(
               heroTag: null,
               onPressed: () => print('Video'),
-              child: const Icon(Icons.video_camera_front),
+              child: const Icon(Icons.play_circle_rounded),
             ),
           ),
         ],
@@ -144,7 +142,7 @@ class _HostViewState extends State<HostView> {
           padding: const EdgeInsets.only(bottom: 5.0),
           alignment: Alignment.bottomCenter,
           child: FloatingActionButton(
-            child: const Icon(Icons.expand_less_outlined),
+            child: const Icon(Icons.api_rounded),
             onPressed: () {
               _navigateToHostCameraView(
                 widget.uuid,
