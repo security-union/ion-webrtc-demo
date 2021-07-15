@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:ion_webrtc_demo/src/styles/app_theme.dart';
 import 'package:ion_webrtc_demo/src/views/home.dart';
 
 void main() {
@@ -12,7 +12,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(brightness: Brightness.dark),
+      theme: appTheme,
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       home: const Home(title: 'Ion WebRTC'),

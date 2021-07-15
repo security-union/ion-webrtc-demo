@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:ion_webrtc_demo/src/models/participant.dart';
+import 'package:ion_webrtc_demo/src/styles/colors.dart';
 
 class HostCameraView extends StatefulWidget {
   const HostCameraView(
@@ -40,20 +41,28 @@ class _HostCameraViewState extends State<HostCameraView> {
           Positioned(
             top: 0,
             left: 0,
-            child: FloatingActionButton(
-              onPressed: () => print('Flash!'),
-              heroTag: null,
-              child: const Icon(Icons.flash_on),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: FloatingActionButton(
+                backgroundColor: AppColors.primaryBlue,
+                onPressed: () => print('Flash!'),
+                heroTag: null,
+                child: const Icon(Icons.flash_on),
+              ),
             ),
           ),
           // Toggle camera button
           Positioned(
             top: 0,
             right: 0,
-            child: FloatingActionButton(
-              onPressed: () => print('Toggle camera!'),
-              heroTag: null,
-              child: const Icon(Icons.toggle_on),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: FloatingActionButton(
+                onPressed: () => print('Toggle camera!'),
+                backgroundColor: AppColors.primaryBlue,
+                heroTag: null,
+                child: const Icon(Icons.toggle_on),
+              ),
             ),
           ),
           // Photo & Video buttons
@@ -62,15 +71,18 @@ class _HostCameraViewState extends State<HostCameraView> {
             left: 0,
             right: 0,
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FloatingActionButton(
                   onPressed: () => print('Photo!'),
+                  backgroundColor: AppColors.primaryBlue,
                   heroTag: null,
                   child: const Icon(Icons.photo),
                 ),
-                const SizedBox(width: 5),
+                const SizedBox(width: 10.0),
                 FloatingActionButton(
                   onPressed: () => print('Video!'),
+                  backgroundColor: AppColors.primaryBlue,
                   heroTag: null,
                   child: const Icon(Icons.play_circle),
                 )

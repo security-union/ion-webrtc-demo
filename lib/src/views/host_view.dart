@@ -1,5 +1,7 @@
 // ignore_for_file: avoid_print
+import 'package:ion_webrtc_demo/src/styles/colors.dart';
 import 'package:ion_webrtc_demo/src/views/host_camera_view.dart';
+import 'package:ion_webrtc_demo/src/widgets/rounded_button.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
@@ -97,7 +99,12 @@ class _HostViewState extends State<HostView> {
           childAspectRatio: 1.0,
         ),
         itemBuilder: (BuildContext context, int index) {
-          return _getItemView(plist[index]);
+          return SizedBox(
+            height: 400,
+            child: _getItemView(
+              plist[index],
+            ),
+          );
         },
       );
 
@@ -123,27 +130,32 @@ class _HostViewState extends State<HostView> {
         ],
       );
 
-  // TODO: Fix Inkwell
   Widget _getItemView(Participant item) {
     print("items: " + item.toString());
-    return Container(
-      padding: const EdgeInsets.all(10.0),
-      child: InkWell(
-        child: RTCVideoView(
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.hardEdge,
+      children: [
+        RTCVideoView(
           item.renderer,
           objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
-          filterQuality: FilterQuality.medium,
         ),
-        onTapDown: (_) {
-          print('Tap down!');
-          _navigateToHostCameraView(
-            widget.uuid,
-            widget.sid,
-            item,
-            _client!,
-          );
-        },
-      ),
+        Container(
+          padding: const EdgeInsets.only(bottom: 5.0),
+          alignment: Alignment.bottomCenter,
+          child: FloatingActionButton(
+            child: const Icon(Icons.expand_less_outlined),
+            onPressed: () {
+              _navigateToHostCameraView(
+                widget.uuid,
+                widget.sid,
+                item,
+                _client!,
+              );
+            },
+          ),
+        )
+      ],
     );
   }
 
