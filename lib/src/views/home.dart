@@ -20,7 +20,7 @@ class _HomeState extends State<Home> {
   // Our device Unique identifier
   final String _uuid = const Uuid().v4();
   final _formKey = GlobalKey<FormState>();
-  String _addr = '';
+  String _addr = "ws://192.168.18.11:7000/ws"; //"ws://192.168.18.11:7000/ws";
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +76,7 @@ class _HomeState extends State<Home> {
         ),
         validator: _validateURL,
         onChanged: onChanged,
+        initialValue: "ws://192.168.18.11:7000/ws",
       );
 
   Widget _submitButton(
