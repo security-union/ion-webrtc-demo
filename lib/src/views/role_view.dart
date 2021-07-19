@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
+import 'package:ion_webrtc_demo/src/models/getUUID.dart';
 import 'package:ion_webrtc_demo/src/styles/colors.dart';
 import 'package:ion_webrtc_demo/src/views/host_view.dart';
 import 'package:ion_webrtc_demo/src/views/qr_scanner.dart';
@@ -11,12 +12,10 @@ import 'package:uuid/uuid.dart';
 class RoleView extends StatefulWidget {
   const RoleView({
     Key? key,
-    required this.uuid,
     required this.addr,
   }) : super(key: key);
 
   final String addr;
-  final String uuid;
 
   @override
   State<RoleView> createState() => _RoleViewState();
@@ -40,8 +39,8 @@ class _RoleViewState extends State<RoleView> {
               color: AppColors.primaryBlue,
               onPressed: () async {
                 final sid = const Uuid().v4();
-
-                _navigateToHost(sid, widget.addr, widget.uuid);
+                final uuid = await getUUID();
+                _navigateToHost(sid, widget.addr, uuid);
               },
             ),
           ),
@@ -50,10 +49,12 @@ class _RoleViewState extends State<RoleView> {
             description: 'Start as a camera and share your video',
             icon: Icons.camera_alt_rounded,
             button: roundedButton(
-              text: 'Camera',
-              color: AppColors.primaryRed,
-              onPressed: () => _navigateToQRScanner(widget.uuid, widget.addr),
-            ),
+                text: 'Camera',
+                color: AppColors.primaryRed,
+                onPressed: () async {
+                  final uuid = await getUUID();
+                  _navigateToQRScanner(uuid, widget.addr);
+                }),
           )
         ],
       ),
