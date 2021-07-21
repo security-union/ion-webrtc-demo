@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 import 'dart:typed_data';
 import 'package:ion_webrtc_demo/src/constants.dart';
+import 'package:ion_webrtc_demo/src/data_channels.dart';
 import 'package:ion_webrtc_demo/src/views/host_camera_view.dart';
 import 'package:flutter/foundation.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -184,21 +185,6 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  Future<RTCDataChannel> createDataChannel({
-    required String binaryType,
-    required int id,
-    required String channel,
-  }) async {
-    final channelInit = RTCDataChannelInit()
-      ..binaryType = binaryType
-      ..id = id;
-    final dataChannel = (await _client?.createDataChannel(
-      channel,
-      channelInit,
-    ))!;
-    return dataChannel;
-  }
-
   void _startSession() async {
     _signal = ion.JsonRPCSignal(widget.addr);
     _client = await ion.Client.create(
@@ -208,12 +194,14 @@ class _HostViewState extends State<HostView> {
     );
 
     _localDataChannel = await createDataChannel(
+      _client!,
       binaryType: 'text',
       id: 41324,
       channel: Constants.commandsChannelLabel,
     );
 
     _imagesDataChannel = await createDataChannel(
+      _client!,
       binaryType: 'binary',
       id: 213,
       channel: Constants.imageBinaryChannel,
@@ -268,7 +256,7 @@ class _HostViewState extends State<HostView> {
     }
   }
 
-  void sendTakePictureCommand() async {
+  sendTakePictureCommand() async {
     await _localDataChannel
         .send(RTCDataChannelMessage("""{ "command": "takePicture" }"""));
   }
