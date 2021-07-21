@@ -1,5 +1,9 @@
 // ignore_for_file: avoid_print
+import 'dart:typed_data';
+import 'package:ion_webrtc_demo/src/constants.dart';
+import 'package:ion_webrtc_demo/src/data_channels.dart';
 import 'package:ion_webrtc_demo/src/views/host_camera_view.dart';
+import 'package:flutter/foundation.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ion/flutter_ion.dart' as ion;
@@ -23,6 +27,9 @@ class _HostViewState extends State<HostView> {
   List<Participant> plist = <Participant>[];
   ion.Client? _client;
   ion.Signal? _signal;
+  late RTCDataChannel _localDataChannel;
+  late RTCDataChannel _imagesDataChannel;
+  WriteBuffer? _imageBuffer;
 
   @override
   void initState() {
@@ -39,24 +46,24 @@ class _HostViewState extends State<HostView> {
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 2,
-        child: Scaffold(
-            appBar: AppBar(
-              title: const Text('You are the Host'),
-              bottom: const TabBar(
-                tabs: <Widget>[
-                  Tab(text: 'QRCode'),
-                  Tab(text: 'Cameras'),
-                ],
-              ),
-            ),
-            body: TabBarView(
-              children: <Widget>[
-                _qrCode(widget.sid),
-                _remotesView(context),
-              ],
-            )),
-      );
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('You are the Host'),
+          bottom: const TabBar(
+            tabs: <Widget>[
+              Tab(text: 'QRCode'),
+              Tab(text: 'Cameras'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            _qrCode(widget.sid),
+            _remotesView(context),
+          ],
+        ),
+      ));
 
   Widget _qrCode(String content) => Container(
         decoration: const BoxDecoration(color: Colors.white),
@@ -113,7 +120,9 @@ class _HostViewState extends State<HostView> {
             padding: const EdgeInsets.all(5),
             child: FloatingActionButton(
               heroTag: null,
-              onPressed: () => print('Photo'),
+              onPressed: () {
+                sendTakePictureCommand();
+              },
               child: const Icon(Icons.camera_rounded),
             ),
           ),
@@ -157,26 +166,99 @@ class _HostViewState extends State<HostView> {
     );
   }
 
-  void _startSession() async {
-    _signal = ion.GRPCWebSignal(widget.addr);
-    print("serverurl " + widget.addr);
-    // create new client
-    _client = await ion.Client.create(
-        sid: widget.sid, uid: widget.uuid, signal: _signal!);
+  Future<void> showPicture(ByteData bytes) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Image.memory(
+          bytes.buffer.asUint8List(),
+          height: 720,
+          width: 1280,
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: Navigator.of(context, rootNavigator: true).pop,
+            child: const Text('OK'),
+          )
+        ],
+      ),
+    );
+  }
 
-    // peer ontrack
-    _client?.ontrack = (track, ion.RemoteStream remoteStream) async {
-      if (track.kind == 'video') {
-        print('remote stream id:  ${remoteStream.id}');
-        print('ontrack: remote stream: ${remoteStream.stream}');
-        var renderer = RTCVideoRenderer();
-        await renderer.initialize();
-        renderer.srcObject = remoteStream.stream;
-        setState(() {
-          plist.add(Participant('RemoteStream', renderer, remoteStream.stream));
-        });
-      }
-    };
+  void _startSession() async {
+    _signal = ion.JsonRPCSignal(widget.addr);
+    _client = await ion.Client.create(
+      sid: widget.sid,
+      uid: widget.uuid,
+      signal: _signal!,
+    );
+
+    _localDataChannel = await createDataChannel(
+      _client!,
+      binaryType: 'text',
+      id: 41324,
+      channel: Constants.commandsChannelLabel,
+    );
+
+    _imagesDataChannel = await createDataChannel(
+      _client!,
+      binaryType: 'binary',
+      id: 213,
+      channel: Constants.imageBinaryChannel,
+    );
+
+    _client!.ontrack = clientOnTrack;
+    _localDataChannel.onDataChannelState = onTextDataChannelState;
+    _imagesDataChannel.onDataChannelState = onImageDataChannelState;
+  }
+
+  clientOnTrack(track, ion.RemoteStream remoteStream) async {
+    if (track.kind == 'video') {
+      print('remote stream id:  ${remoteStream.id}');
+      print('ontrack: remote stream: ${remoteStream.stream}');
+      var renderer = RTCVideoRenderer();
+      await renderer.initialize();
+      renderer.srcObject = remoteStream.stream;
+      setState(() {
+        plist.add(Participant('RemoteStream', renderer, remoteStream.stream));
+      });
+    }
+  }
+
+  onTextDataChannelState(RTCDataChannelState state) async {
+    print("commands socket state changed $state");
+    if (state == RTCDataChannelState.RTCDataChannelOpen) {
+      print("commands socket state changed $state");
+      _localDataChannel.messageStream.forEach(
+        (msg) async => print("got msg ${msg.text}"),
+      );
+    }
+  }
+
+  onImageDataChannelState(RTCDataChannelState state) async {
+    print("images socket state changed $state");
+    if (state == RTCDataChannelState.RTCDataChannelOpen) {
+      _imagesDataChannel.messageStream.forEach(
+        (msg) async {
+          print("image onMessage ${msg.binary.length}");
+          if (msg.binary.length != Constants.endOfFileMessage.length) {
+            print("adding chunk");
+            _imageBuffer?.putUint8List(msg.binary);
+          } else {
+            print("got eol");
+            final image = _imageBuffer?.done();
+            _imageBuffer = WriteBuffer();
+            print("sending image to ui ${image?.lengthInBytes}");
+            if (image != null) await showPicture(image);
+          }
+        },
+      );
+    }
+  }
+
+  sendTakePictureCommand() async {
+    await _localDataChannel
+        .send(RTCDataChannelMessage("""{ "command": "takePicture" }"""));
   }
 
   void _navigateToHostCameraView(

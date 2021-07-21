@@ -4,7 +4,6 @@ import 'package:ion_webrtc_demo/src/styles/colors.dart';
 import 'package:ion_webrtc_demo/src/styles/text.dart';
 import 'package:ion_webrtc_demo/src/views/role_view.dart';
 import 'package:ion_webrtc_demo/src/widgets/rounded_button.dart';
-import 'package:uuid/uuid.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key, required this.title}) : super(key: key);
@@ -16,10 +15,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  // Our device Unique identifier
-  final String _uuid = const Uuid().v4();
   final _formKey = GlobalKey<FormState>();
-  String _addr = '';
+  String _addr = "ws://192.168.18.11:7000/ws"; //"ws://192.168.18.11:7000/ws";
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +31,7 @@ class _HomeState extends State<Home> {
             _formKey,
             onUpdateAddr: (String addr) => setState(() => _addr = addr),
             onValidSubmit: () {
-              _navigateToRoleView(_uuid, _addr);
+              _navigateToRoleView(_addr);
             },
           ),
         ),
@@ -75,6 +72,7 @@ class _HomeState extends State<Home> {
         ),
         validator: _validateURL,
         onChanged: onChanged,
+        initialValue: "ws://192.168.18.11:7000/ws",
       );
 
   Widget _submitButton(
@@ -93,12 +91,12 @@ class _HomeState extends State<Home> {
         },
       );
 
-  void _navigateToRoleView(String uuid, String addr) {
+  void _navigateToRoleView(String addr) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return RoleView(uuid: uuid, addr: addr);
+          return RoleView(addr: addr);
         },
       ),
     );
